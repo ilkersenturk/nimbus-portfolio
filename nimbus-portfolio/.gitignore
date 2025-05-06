@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# VSCode / Codespaces
+.vscode/
+.devcontainer/
+
+# Mac and system files
+.DS_Store
+
+# Pytest cache
+.pytest_cache/
+
+# Compiled HTML / Temp
+*.log
