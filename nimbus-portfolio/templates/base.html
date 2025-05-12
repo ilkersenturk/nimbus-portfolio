@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Ilker Senturk{% endblock %}</title>
+
+  <!-- Fonts & Styles -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer" />
+</head>
+
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="{{ url_for('home') }}">Home</a>
+    <a href="{{ url_for('selenium') }}">Selenium</a>
+    <a href="{{ url_for('docker') }}">Docker</a>
+    <a href="{{ url_for('pytest') }}">Pytest</a>
+    <a href="{{ url_for('dsa') }}">DSA</a>
+    <a href="{{ url_for('contact') }}">Contact</a>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Page-specific JS -->
+  {% block scripts %}{% endblock %}
+</body>
+</html>

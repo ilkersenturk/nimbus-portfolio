@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Pytest Tutorial - Ilker Senturk{% endblock %}
+
+{% block content %}
+<section class="callout primary">
+  <h1>Pytest Tutorial</h1>
+  <p>
+    Pytest is one of the most popular testing frameworks in the Python ecosystem. It's widely used for writing simple unit tests to complex functional and integration tests — all with clean, expressive code.
+  </p>
+</section>
+
+<section class="callout primary">
+  <h2>Why Use Pytest?</h2>
+  <ul>
+    <li>✅ Clean, readable syntax without boilerplate</li>
+    <li>🧪 Supports unit, integration, API, and UI testing</li>
+    <li>🔁 Built-in fixtures and parameterization</li>
+    <li>🔌 Rich plugin ecosystem (e.g., <code>pytest-xdist</code>, <code>pytest-html</code>)</li>
+    <li>⚙️ Easily integrates into Docker and CI/CD pipelines</li>
+  </ul>
+</section>
+
+<section class="callout primary">
+  <h2>Installing Pytest</h2>
+  <pre><code>pip install pytest</code></pre>
+</section>
+
+<section class="callout primary">
+  <h2>Writing Your First Test</h2>
+  <pre><code># test_sample.py
+
+def test_addition():
+    assert 1 + 1 == 2
+</code></pre>
+  <div class="highlight">
+    <p>
+      ✅ Any file that starts with <code>test_</code> and any function that starts with <code>test_</code> will be automatically discovered and run by Pytest.
+    </p>
+  </div>
+</section>
+
+<section class="callout primary">
+  <h2>What is <code>conftest.py</code>?</h2>
+  <p>
+    <code>conftest.py</code> is a special file in Pytest used to define fixtures, hooks, and shared test setup logic across multiple test files. Pytest auto-detects and loads this file without the need to import it manually.
+  </p>
+</section>
+
+<section class="callout primary">
+  <h3>Example <code>conftest.py</code></h3>
+  <pre><code># conftest.py
+
+import pytest
+
+@pytest.fixture(scope="session")
+def db_conn():
+    print("Connecting to DB")
+    yield "db_connection_object"
+    print("Closing DB")
+
+@pytest.fixture
+def user_data():
+    return {"username": "admin", "password": "1234"}
+</code></pre>
+</section>
+
+<section class="callout primary">
+  <h2>Using Fixtures in Tests</h2>
+  <pre><code># test_login.py
+
+def test_login_success(user_data):
+    assert user_data["username"] == "admin"
+</code></pre>
+  <div class="highlight">
+    <p>
+      🔁 Fixtures help you reuse data and setup logic. Use them to provide test data, manage resources, or wrap setup/teardown logic.
+    </p>
+  </div>
+</section>
+
+<section class="callout primary">
+  <h2>Markers and Grouping Tests</h2>
+  <pre><code># test_api.py
+
+import pytest
+
+@pytest.mark.smoke
+def test_status():
+    assert True
+
+@pytest.mark.regression
+def test_edge_case():
+    assert 1 == 1
+</code></pre>
+  <div class="highlight">
+    <p>
+      🏷️ Use <code>@pytest.mark.name</code> to tag tests. Then run with <code>pytest -m "smoke"</code> or <code>-m "not regression"</code>.
+    </p>
+  </div>
+</section>
+
+<section class="callout primary">
+  <h2>Session Hooks: Before/After All Tests</h2>
+  <pre><code># conftest.py
+
+def pytest_sessionstart(session):
+    print("===> Test session starting")
+
+def pytest_sessionfinish(session, exitstatus):
+    print("===> Test session ending")
+</code></pre>
+  <div class="highlight">
+    <p>
+      🪝 Pytest allows you to hook into lifecycle events. Use these for global setup/teardown, like DB init or environment reset.
+    </p>
+  </div>
+</section>
+
+<section class="callout primary">
+  <h2>Command Line Examples</h2>
+  <pre><code># Run smoke tests, stop on 2 failures, no warnings
+pytest -m "smoke" --maxfail=2 --disable-warnings -v
+</code></pre>
+  <div class="highlight">
+    <p>
+      ▶️ The CLI gives you full control over what runs and how it runs.
+    </p>
+  </div>
+</section>
+
+<section class="callout primary">
+  <h2>Pytest Execution Flow</h2>
+  <img src="{{ url_for('static', filename='img/pytest.png') }}" alt="Pytest Flow" style="max-width:100%; border-radius: 8px;" />
+  <div class="highlight">
+    <p>
+      🔍 From command line to final report, Pytest flows like this:<br/>
+      <code>CLI → Discovery → Fixture Setup → Test Run → Hooks → Report</code><br/>
+      You can hook into almost any stage with plugins and custom logic.
+    </p>
+  </div>
+</section>
+
+<section class="highlight">
+  <p>
+    💡 <strong>Wrap-up:</strong> Pytest gives you a powerful, flexible way to write tests that scale — from a single unit test to full automation suites. With <code>conftest.py</code>, fixtures, markers, and hooks, you have all the tools needed for modern testing.
+  </p>
+</section>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Selenium Framework - Ilker Senturk{% endblock %}
+
+{% block content %}
+<section class="callout primary">
+  <h1>Selenium Automation Framework</h1>
+  <p>Pytest + Page Object Model + CLI Config + Real Test Architecture</p>
+</section>
+
+<section class="callout primary">
+  <h2>Framework Architecture</h2>
+  <img id="selenium_image" src="{{ url_for('static', filename='img/simple_selenium.png') }}" alt="Selenium Architecture Diagram" class="arch-diagram" />
+  <div class="highlight">
+    <p>This diagram illustrates the structure of the Selenium automation framework, showcasing how CLI triggers pytest, which initializes the shared driver, runs page-object-driven tests, and ends with teardown and report generation.</p>
+  </div>
+</section>
+
+
+<section class="callout primary conftest">
+  <div class="highlight conftest_explanation">
+    <p>
+      🛠️ <strong>What is <code>conftest.py</code>?</strong><br/><br/>
+      This file acts as the control center for test setup. Fixtures like <code>driver()</code> help speed up test runs, eliminate repetition, and keep test configuration clean and centralized.
+    </p>
+  </div>
+  <h3>Driver Setup – <code>conftest.py</code></h3>
+  <pre><code>import pytest
+import logging
+import traceback
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+
+logging.basicConfig(filename='test_execution.log', level=logging.INFO, format='%(asctime)s - %(message)s')
+
+driver_instance = None
+
+def pytest_addoption(parser):
+    parser.addoption("--browser", action="store", default="chrome")
+    parser.addoption("--headless", action="store_true")
+    parser.addoption("--url", action="store", default="https://example.com")
+    parser.addoption("--window", action="store", default="maximize")
+
+@pytest.fixture(scope="session")
+def driver(request):
+    global driver_instance
+    browser = request.config.getoption("--browser")
+    headless = request.config.getoption("--headless")
+    url = request.config.getoption("--url")
+    window = request.config.getoption("--window")
+
+    if browser == "chrome":
+        options = ChromeOptions()
+        if headless:
+            options.add_argument("--headless=new")
+        options.add_argument("--disable-infobars")
+        options.add_argument("--ignore-certificate-errors")
+        driver_instance = webdriver.Chrome(options=options)
+
+    elif browser == "firefox":
+        options = FirefoxOptions()
+        if headless:
+            options.add_argument("--headless")
+        driver_instance = webdriver.Firefox(options=options)
+
+    driver_instance.get(url)
+    return driver_instance
+
+def pytest_sessionfinish(session, exitstatus):
+    global driver_instance
+    logging.info("Test session finished.")
+    if driver_instance:
+        driver_instance.quit()
+        logging.info("Browser closed.")
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    total = terminalreporter._numcollected
+    passed = len(terminalreporter.stats.get("passed", []))
+    failed = len(terminalreporter.stats.get("failed", []))
+    skipped = len(terminalreporter.stats.get("skipped", []))
+    print(f"Summary — Total: {total}, Passed: {passed}, Failed: {failed}, Skipped: {skipped}")
+</code></pre>
+  
+</section>
+
+<section class="callout primary basepage">
+  <div class="highlight basepage_explanation">
+    <p>
+      🧱 <strong>What is <code>BasePage</code>?</strong><br/><br/>
+      Shared UI interaction logic lives here. It provides custom methods like <code>click_element</code> and <code>update_input</code>, which are reused by every page object to keep tests DRY and consistent.
+    </p>
+  </div>
+
+  <h2>Base Page – <code>base_page.py</code></h2>
+  <pre><code>from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
+from selenium.common.exceptions import *
+
+class BasePage:
+    def __init__(self, driver, timeout=10):
+        self.driver = driver
+        self.timeout = timeout
+
+    def wait_for(self, locator):
+        return WebDriverWait(self.driver, self.timeout).until(EC.visibility_of_element_located(locator))
+
+    def click_element(self, locator):
+        self.wait_for(locator).click()
+
+    def click_checkbox_or_radio(self, locator):
+        el = self.wait_for(locator)
+        if not el.is_selected():
+            el.click()
+
+    def update_input(self, locator, text):
+        el = self.wait_for(locator)
+        el.clear()
+        el.send_keys(text)
+
+    def select_element_from_dropdown(self, locator, visible_text):
+        select = Select(self.wait_for(locator))
+        select.select_by_visible_text(visible_text)
+</code></pre>
+  
+</section>
+
+<section class="callout primary pom">
+  <div class="highlight pom_explanation">
+    <p>
+      📄 <strong>Why use a Page Object like <code>LoginPage</code>?</strong><br/>
+      POM structures code by page, so each UI action (like login) is cleanly encapsulated — improving clarity, reuse, and real-world test simulation.
+    </p>
+  </div>
+  <h2>Login Page – <code>login_page.py</code></h2>
+  <pre><code>from selenium.webdriver.common.by import By
+from base_page import BasePage
+
+class LoginPage(BasePage):
+    USERNAME = (By.ID, "username")
+    PASSWORD = (By.ID, "password")
+    LOGIN_BTN = (By.ID, "submit")
+
+    def login(self, user, password):
+        self.update_input(self.USERNAME, user)
+        self.update_input(self.PASSWORD, password)
+        self.click_element(self.LOGIN_BTN)
+</code></pre>
+  
+</section>
+
+<section class="callout primary testbase">
+  <div class="highlight testbase_explanation">
+    <p>
+      🧪 <strong>Why use a <code>TestBase</code>?</strong><br/>
+      Shared test setup (e.g., open URL) lives in <code>TestBase</code>, keeping test cases focused on validation logic only. It improves scalability and test clarity.
+    </p>
+  </div>
+  <h2>Test Class – <code>test_login.py</code></h2>
+  <pre><code>import pytest
+from pages.login_page import LoginPage
+
+@pytest.mark.usefixtures("driver")
+class TestLogin:
+    def test_valid_login(self, driver):
+        LoginPage(driver).login("user", "pass123")
+        assert "Dashboard" in driver.title
+
+    def test_invalid_login(self, driver):
+        LoginPage(driver).login("invalid", "wrongpass")
+        assert "Login failed" in driver.page_source
+</code></pre>
+ 
+</section>
+
+<section class="callout primary">
+  <h2>DB Utility – <code>db_connection.py</code></h2>
+  <pre><code>import pymysql
+
+class DBConnection:
+    def __init__(self, host, user, password, db):
+        self.connection = pymysql.connect(host=host, user=user, password=password, db=db)
+
+    def fetch_data(self, query):
+        with self.connection.cursor() as cursor:
+            cursor.execute(query)
+            return cursor.fetchall()
+
+    def close(self):
+        self.connection.close()
+</code></pre>
+</section>
+
+<section class="callout primary testreport">
+
+  <div class="highlight testbase_explanation">
+    <p>
+      📄 <strong>Why create an <code>HTML Report</code>?</strong><br/>
+      HTML reports provide a clear, interactive summary of test results — making it easy to see which tests passed or failed. They help teams quickly identify issues and share results with both technical and non-technical stakeholders.
+    </p>
+  </div>
+  
+
+  <h2>Test Summary (Sample)</h2>
+  <div class="test-summary">
+    📊 <strong>Total Tests:</strong> 12<br/>
+    ✅ <strong>Passed:</strong> 10<br/>
+    ❌ <strong>Failed:</strong> 2<br/>
+    ⏭️ <strong>Skipped:</strong> 0<br/>
+    🕒 <strong>Duration:</strong> 45 seconds
+  </div>
+</section>
+{% endblock %}

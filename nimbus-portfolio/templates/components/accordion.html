@@ -1,0 +1,31 @@
+<button class="accordion"><strong>{{ ds.title }}</strong></button>
+<div class="panel">
+  <h3>📌 Why Use {{ ds.short_title }}?</h3>
+  <p>{{ ds.why }}</p>
+
+  <h3>📍 When / Where?</h3>
+  <p>{{ ds.when }}</p>
+
+  <h3>⚙️ Key Algorithms & Operations</h3>
+  <ul>
+    {% for algo in ds.algorithms %}
+      <li>{{ algo }}</li>
+    {% endfor %}
+  </ul>
+
+  <h3>❌ Common Mistakes</h3>
+  <ul>
+    {% for mistake in ds.mistakes %}
+      <li>{{ mistake }}</li>
+    {% endfor %}
+  </ul>
+
+  <h3>🧠 Key Considerations</h3>
+  <p>{{ ds.considerations }}</p>
+
+  <h3>🌍 Real-Life Example</h3>
+  <p>{{ ds.real_life }}</p>
+
+  <h3>💻 Example</h3>
+  <pre><code>{{ ds.example }}</code></pre>
+</div>

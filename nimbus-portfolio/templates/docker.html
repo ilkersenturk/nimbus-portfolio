@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Docker for Automation - Ilker Senturk{% endblock %}
+
+{% block content %}
+<section class="callout primary" style="display: flex; flex-wrap: wrap; align-items: center; gap: 2rem;">
+  <div style="flex: 1;">
+    <h1>What is Docker?</h1>
+    <p>
+      Docker is a containerization platform that lets you package applications and their dependencies into a lightweight, portable container. These containers run consistently across different environments — from local dev machines to CI pipelines and cloud servers.
+    </p>
+    <p>
+      Unlike virtual machines, Docker containers share the host OS kernel, making them faster and more efficient. It's perfect for isolating test environments, ensuring consistency, and scaling infrastructure with minimal overhead.
+    </p>
+  </div>
+  <div style="flex: 1;">
+    <img src="{{ url_for('static', filename='img/docker.png') }}" alt="Docker vs VM" style="max-width:100%; border-radius: 10px;" />
+  </div>
+</section>
+
+<section class="callout primary">
+    <h2>Why Docker Is a Game-Changer for Test Automation</h2>
+    <ul>
+      <li>🐳 <strong>Consistency Across Environments</strong><br/>
+        Eliminate the “it works on my machine” problem by running the same containerized setup across local, CI/CD, and cloud environments.</li>
+      <li>🚀 <strong>Rapid Setup and Teardown</strong><br/>
+        Spin up isolated test environments in seconds — no more complex manual setup or waiting on IT.</li>
+      <li>📦 <strong>Portability and Scalability</strong><br/>
+        Share and reuse Docker images effortlessly. Scale test runners or services using Compose or Swarm with minimal overhead.</li>
+      <li>⚙️ <strong>Infrastructure-as-Code with Docker Compose</strong><br/>
+        Define entire automation ecosystems — Selenium Grid, databases, mock servers — using simple YAML files.</li>
+    </ul>
+  </section>
+
+  <section class="callout primary">
+    <h2>Basic Dockerfile Example</h2>
+    <pre><code># Dockerfile
+  
+  # 🐍 Use official Python 3.10 image as the base
+  FROM python:3.10
+  
+  # 📁 Set working directory inside the container
+  WORKDIR /app
+  
+  # 📦 Copy dependency list and install them
+  COPY requirements.txt .
+  RUN pip install -r requirements.txt
+  
+  # 📂 Copy all project files into container
+  COPY . .
+  
+  # 🚀 Run tests using Pytest when the container starts
+  CMD ["pytest", "--maxfail=2", "--disable-warnings"]
+  </code></pre>
+  
+    <div class="highlight">
+      <p>
+        📦 <strong>What’s happening here?</stbr/><br/>
+        This <code>Dockerfile</code> defines a simple automation container that uses Python 3.10 and installs project dependencies from <code>requirements.txt</code>. It sets <code>/app</code> as the working directory, copies your test code inside, and runs <code>pytest</code> automatically when the container is launched. This makes it easy to run tests consistently across machines or CI pipelines.
+      </p>
+    </div>
+  </section>
+
+  <section class="callout primary">
+    <h2>Advanced docker-compose.yml Example (Automation + DB + Mock API)</h2>
+    <pre><code># docker-compose.yml
+  
+  version: "3.8"
+  
+  services:
+    postgres:
+      image: postgres:14
+      container_name: test-postgres
+      environment:
+        POSTGRES_USER: testuser
+        POSTGRES_PASSWORD: testpass
+        POSTGRES_DB: testdb
+      ports:
+        - "5432:5432"
+      volumes:
+        - db_data:/var/lib/postgresql/data
+      networks:
+        - testnet
+  
+    mock-api:
+      image: mockoon/cli
+      container_name: mock-api
+      volumes:
+        - ./mock-config.json:/data/mock-config.json
+      command: --data /data/mock-config.json --port 3000
+      ports:
+        - "3000:3000"
+      networks:
+        - testnet
+  
+    automation:
+      build: .
+      volumes:
+        - .:/app
+        - logs:/app/logs
+      working_dir: /app
+      command: pytest --maxfail=3 --disable-warnings
+      depends_on:
+        - postgres
+        - mock-api
+      networks:
+        - testnet
+  
+  volumes:
+    db_data:
+    logs:
+  
+  networks:
+    testnet:
+      driver: bridge
+  </code></pre>
+  
+    <div class="highlight">
+      <p>
+        🔍 <strong>What does this setup do?</strong><br/><br/>
+        This Compose setup creates a full integration test environment:
+      </p>
+      <ul>
+        <li>📦 <strong>PostgreSQL</strong> — used for test fixtures, schema validation, and SQL-based automation</li>
+        <li>🧪 <strong>Mock API Server</strong> — simulates external APIs (authentication, payments, etc.)</li>
+        <li>🚀 <strong>Automation</strong> — your test container connects to both services and executes end-to-end flows</li>
+        <li>🔗 Shared network (<code>testnet</code>) ensures all services can talk to each other</li>
+        <li>💾 Volumes persist database state and logs</li>
+      </ul>
+      <p>
+        This structure mimics a production-like backend, helping you validate real workflows with fast, disposable containers.
+      </p>
+    </div>
+  </section>
+  
+  
+
+<section class="callout primary">
+  <h2>Selenium Grid with 10 Chrome Nodes (Docker Compose)</h2>
+  <pre><code>version: "3"
+services:
+  selenium-hub:
+    image: selenium/hub:4.10
+    container_name: selenium-hub
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
+
+  chrome-node:
+    image: selenium/node-chrome:4.10
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    deploy:
+      replicas: 10
+</code></pre>
+</section>
+
+<section class="highlight">
+  <p>
+    💡 <strong>Key Considerations When Using Docker for Selenium Grid:</strong>
+  </p>
+  <ul>
+    <li>🧠 Use named networks for inter-container communication</li>
+    <li>💾 Map volumes only if logs/screenshots need persistence</li>
+    <li>📊 Monitor container health and memory limits</li>
+    <li>🧹 Ensure proper cleanup of containers to avoid stale sessions</li>
+    <li>🌐 Automation scripts must target <code>http://selenium-hub:4444/wd/hub</code> as the remote WebDriver URL</li>
+  </ul>
+</section>
+{% endblock %}

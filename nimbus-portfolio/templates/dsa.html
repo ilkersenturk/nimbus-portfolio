@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Advanced Data Structures & Algorithms - Python{% endblock %}
+
+{% block content %}
+<section class="callout primary">
+  <h1>Advanced Python Data Structures</h1>
+  <p>This page explains core data structures with use cases, real-world examples, and sample code.</p>
+</section>
+
+<div class="accordion-container">
+  {% for ds in data_structures %}
+    {% include 'components/accordion.html' %}
+  {% endfor %}
+</div>
+
+<section class="callout primary">
+  <h2>🧪 Try Python in the Browser</h2>
+  <iframe
+    src="https://jupyterlite.github.io/demo/repl/index.html"
+    style="width: 100%; height: 600px; border: none; border-radius: 8px;"
+    loading="lazy"
+  ></iframe>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelectorAll(".accordion").forEach(btn => {
+    btn.addEventListener("click", () => {
+      btn.classList.toggle("active");
+      btn.nextElementSibling.classList.toggle("open");
+    });
+  });
+</script>
+{% endblock %}
