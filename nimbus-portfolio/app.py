@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, flash
 from data_structures import data_structures  # ✅ import correctly
 
 app = Flask(__name__)
@@ -30,8 +30,20 @@ def pytest():
 def dsa():
     return render_template("dsa.html", data_structures=data_structures)
 
-@app.route("/contact")
+@app.route("/contact", methods=["GET", "POST"])
 def contact():
+
+    if request.method == "POST":
+        name = request.form["name"]
+        email = request.form["email"]
+        message = request.form["message"]
+
+        # Optional: print or log the message (or send to AWS SNS)
+        print(f"Message from {name} <{email}>: {message}")
+        flash("Your message has been sent. Thank you!")
+
+        return redirect("/contact")
+
     return render_template("contact.html")
 
 if __name__ == "__main__":
